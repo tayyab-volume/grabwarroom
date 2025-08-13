@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import connectDB from "@/lib/mongoose";
 import { User } from "@/models/User";
-var jwt = require("jsonwebtoken");
+import jwt from 'jsonwebtoken';
 
 const JWT_SECRET = process.env.JWT_SECRET || "yoursecretkey";
 

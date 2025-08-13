@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import connectDB from "@/lib/mongoose";
 import { Booking } from "@/models/Booking";
-var jwt = require("jsonwebtoken");
+import jwt from 'jsonwebtoken';
 const JWT_SECRET = process.env.JWT_SECRET || "yoursecretkey";
 
 interface BookingRequest {
@@ -11,16 +11,6 @@ interface BookingRequest {
   startTime: string; // HH:MM
   endTime: string; // HH:MM
   usersInvolved: string[]; // emails
-}
-
-function isTimeOverlap(
-  start1: string,
-  end1: string,
-  start2: string,
-  end2: string
-) {
-  // Returns true if time intervals overlap
-  return start1 < end2 && start2 < end1;
 }
 
 export async function POST(req: Request) {
@@ -34,11 +24,12 @@ export async function POST(req: Request) {
     }
 
     const token = authHeader.substring(7);
-    let decoded: any;
+    let decoded: unknown;
     try {
       decoded = jwt.verify(token, JWT_SECRET);
-    } catch {
-      return NextResponse.json({ error: "Invalid token" }, { status: 401 });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      return NextResponse.json({ error: "Invalid token: " + message }, { status: 401 });
     }
 
     const body: BookingRequest = await req.json();

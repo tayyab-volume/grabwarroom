@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import localFont from "next/font/local";
 
@@ -15,6 +15,44 @@ export default function AdminLoginPage() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState(""); // For error/success messages
   const router = useRouter();
+
+  useEffect(() => {
+    const verifyNetwork = async () => {
+      try {
+        // Get user's public IP
+        const res = await fetch("https://api.ipify.org?format=json");
+        const data = await res.json();
+        const userIP = data.ip;
+
+        // Your office Wi-Fi's public IP
+        const allowedIP = "180.151.238.126";
+
+        if (userIP !== allowedIP) {
+          router.replace("/not-grabwarroom"); // or your custom "access denied" page
+          return;
+        }
+      } catch (error) {
+        console.error("Error checking network:", error);
+        router.replace("/not-grabwarroom");
+        return;
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    verifyNetwork();
+
+    const token = localStorage.getItem("adminToken");
+    if (token) {
+      // Optionally, you could verify token validity here by decoding or an API call
+      router.replace("/admin/dashboard");
+    }
+
+     if (window.innerWidth < 768) {
+      router.replace("/not-desktop");
+      return;
+    }
+  }, [router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

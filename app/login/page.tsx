@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import localFont from "next/font/local";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation"; // to programmatically redirect
 import { Eye, EyeOff } from "lucide-react";
 
 const centuryGothic = localFont({
@@ -12,6 +13,16 @@ const centuryGothic = localFont({
 });
 
 export default function LoginPage() {
+  const router = useRouter();
+
+  // Redirect if userToken exists
+  useEffect(() => {
+    const token = localStorage.getItem("userToken");
+    if (token) {
+      router.replace("/dashboard");
+    }
+  }, [router]);
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -39,15 +50,15 @@ export default function LoginPage() {
         localStorage.setItem("userToken", data.token);
         setMessage("Login successful! Redirecting...");
 
-        // Redirect to admin dashboard after a short delay
+        // Redirect to dashboard after a short delay
         setTimeout(() => {
-          window.location.href = "/dashboard"; // or your dashboard path
+          router.replace("/dashboard");
         }, 1000);
       } else {
         setMessage(data.error || "Login failed");
       }
     } catch (error) {
-      setMessage("Server error, please try again later.");
+      setMessage("Server error, please try again later." + error);
     } finally {
       setLoading(false);
     }
@@ -118,11 +129,7 @@ export default function LoginPage() {
               aria-label={showPassword ? "Hide password" : "Show password"}
               tabIndex={-1}
             >
-              {showPassword ? (
-                <EyeOff size={20} />
-              ) : (
-                <Eye size={20} />
-              )}
+              {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
             </button>
           </div>
 

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { MongoClient, ObjectId } from "mongodb";
-var jwt = require("jsonwebtoken");
+import { MongoClient } from "mongodb";
+import jwt from 'jsonwebtoken';
 
 const JWT_SECRET = process.env.JWT_SECRET || "supersecret";
 const MONGODB_URI = process.env.MONGODB_URI!;
@@ -17,7 +17,7 @@ async function connectToDatabase() {
 
 async function verifyJWT(token: string) {
   return new Promise<void>((resolve, reject) => {
-    jwt.verify(token, JWT_SECRET, (err: any) => {
+    jwt.verify(token, JWT_SECRET, (err: unknown) => {
       if (err) reject(err);
       else resolve();
     });

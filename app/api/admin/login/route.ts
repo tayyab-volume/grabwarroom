@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-var jwt = require('jsonwebtoken');
+import jwt from 'jsonwebtoken';
 
 
 const ADMIN_EMAIL = "admin@warroom.in";

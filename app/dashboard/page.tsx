@@ -169,11 +169,11 @@ export default function DashboardPage() {
             onClick={seeTodaysSchedule}
             className="bg-gray-600 text-white px-6 py-2 cursor-pointer rounded-full font-semibold hover:bg-gray-700 transition duration-300"
           >
-            See Today's Schedule
+            See Today&apos;s Schedule
           </button>
           <button
             onClick={handleLogout}
-            className="bg-black text-white px-6 py-2 rounded-full font-semibold hover:bg-gray-800 transition duration-300"
+            className="bg-black text-white px-6 py-2 rounded-full font-semibold cursor-pointer hover:bg-gray-800 transition duration-300"
           >
             Logout
           </button>
@@ -217,7 +217,7 @@ export default function DashboardPage() {
             onChange={(e) => setDate(e.target.value)}
             min={today}
             required
-            className="px-4 py-3 border rounded-lg focus:ring-2 focus:ring-black"
+            className="px-4 py-3 border cursor-pointer rounded-lg focus:ring-2 focus:ring-black"
           />
           <input
             type="time"
@@ -238,7 +238,7 @@ export default function DashboardPage() {
 
           {/* User selection dropdown */}
           <div>
-            <label className="block mb-1 font-semibold text-gray-700">
+            <label className="block mb-1 font-semibold text-gray-700 bg">
               Add Users Involved
             </label>
             <select
@@ -266,7 +266,7 @@ export default function DashboardPage() {
                   <button
                     type="button"
                     onClick={() => handleRemoveUser(user.id)}
-                    className="text-gray-600 hover:text-gray-900 font-bold"
+                    className="text-gray-600 cursor-pointer hover:text-gray-900 font-bold"
                     aria-label={`Remove ${user.email}`}
                   >
                     &times;
@@ -278,7 +278,7 @@ export default function DashboardPage() {
 
           <button
             type="submit"
-            className="bg-black text-white py-3 rounded-full font-semibold hover:bg-gray-800 transition"
+            className="bg-black text-white py-3 cursor-pointer rounded-full font-semibold hover:bg-gray-800 transition"
           >
             Book Now
           </button>

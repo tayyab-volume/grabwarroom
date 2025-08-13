@@ -1,5 +1,8 @@
+"use client";
 import Link from "next/link";
 import localFont from "next/font/local";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 // Load Century Gothic font
 const centuryGothic = localFont({
@@ -9,6 +12,50 @@ const centuryGothic = localFont({
 });
 
 export default function LandingPage() {
+  const [loading, setLoading] = useState(true);
+
+  const router = useRouter();
+
+  useEffect(() => {
+    const verifyNetwork = async () => {
+      try {
+        // Get user's public IP
+        const res = await fetch("https://api.ipify.org?format=json");
+        const data = await res.json();
+        const userIP = data.ip;
+
+        // Your office Wi-Fi's public IP
+        const allowedIP = "180.151.238.126";
+
+        if (userIP !== allowedIP) {
+          router.replace("/not-grabwarroom"); // or your custom "access denied" page
+          return;
+        }
+      } catch (error) {
+        console.error("Error checking network:", error);
+        router.replace("/not-grabwarroom");
+        return;
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    verifyNetwork();
+
+    if (window.innerWidth < 768) {
+      router.replace("/not-desktop");
+      return;
+    }
+  }, [router]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p className="text-black text-lg">Checking network...</p>
+      </div>
+    );
+  }
+
   return (
     <div
       className={`min-h-screen bg-white flex flex-col ${centuryGothic.variable}`}
@@ -32,11 +79,11 @@ export default function LandingPage() {
           <div className="flex items-center gap-8">
             <span>GrabWarRoom by</span>
             <a href="https://volume.in/" target="_blank">
-            <img
-              src="/logo.png"
-              alt="Volume Logo"
-              className="h-12 md:h-26 mb-8 object-contain"
-            />
+              <img
+                src="/logo.png"
+                alt="Volume Logo"
+                className="h-12 md:h-26 mb-8 object-contain"
+              />
             </a>
           </div>
         </h1>

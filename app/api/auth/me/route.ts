@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-var jwt = require('jsonwebtoken');
+import jwt from 'jsonwebtoken';
 import connectDB from "@/lib/mongoose";
 import {User} from "@/models/User"; // ✅ Use default import unless you actually export { User }
 
@@ -19,11 +19,11 @@ export async function GET(req: Request) {
 
     const user = await User.findById(decoded.id).select("-password");
     if (!user) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
+      return NextResponse.json({ error: "User not found"}, { status: 404 });
     }
 
     return NextResponse.json({ user });
   } catch (error) {
-    return NextResponse.json({ error: "Invalid token" }, { status: 401 });
+    return NextResponse.json({ error: "Invalid token"+error }, { status: 401 });
   }
 }

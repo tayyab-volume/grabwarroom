@@ -65,7 +65,7 @@ export default function TodaysSchedulePage() {
       {/* Header */}
       <header className="w-full max-w-7xl mx-auto flex justify-between items-center py-6 px-4 md:px-8 border-b border-gray-200">
         <h1 className="text-3xl font-extrabold text-black tracking-tight">
-          Today's Schedule
+          Today&apos;s Schedule
         </h1>
         <button
           onClick={goBack}

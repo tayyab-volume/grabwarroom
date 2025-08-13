@@ -174,15 +174,25 @@ export default function ManageUsersPage() {
       <div className="max-w-6xl mx-auto bg-white p-10 rounded-2xl shadow-lg">
         <div className="flex justify-between items-center mb-4 max-w-6xl mx-auto px-6">
           <h1 className="text-4xl font-bold text-black">Admin Dashboard</h1>
-          <button
-            onClick={() => {
-              localStorage.removeItem("adminToken");
-              window.location.href = "/";
-            }}
-            className="bg-black text-white cursor-pointer px-4 py-2 rounded hover:bg-red-700 transition"
-          >
-            Logout
-          </button>
+          <div>
+            <button
+              onClick={() => {
+                window.location.href = "/admin/dashboard";
+              }}
+              className="bg-black text-white cursor-pointer mr-6 px-4 py-2 rounded hover:bg-gray-800 transition"
+            >
+              Go Back
+            </button>
+            <button
+              onClick={() => {
+                localStorage.removeItem("adminToken");
+                window.location.href = "/";
+              }}
+              className="bg-black text-white cursor-pointer px-4 py-2 rounded hover:bg-gray-800 transition"
+            >
+              Logout
+            </button>
+          </div>
         </div>
 
         <h1 className="text-4xl font-bold text-center text-black mb-2">
@@ -228,7 +238,7 @@ export default function ManageUsersPage() {
           />
           <button
             type="submit"
-            className="md:col-span-4 bg-black text-white py-3 rounded-full font-semibold hover:bg-gray-800 transition"
+            className="md:col-span-4 bg-black text-white py-3 rounded-full cursor-pointer font-semibold hover:bg-gray-800 transition"
           >
             Add User
           </button>
@@ -291,7 +301,7 @@ export default function ManageUsersPage() {
                         <td className="p-3 border flex gap-2">
                           <button
                             onClick={saveEdit}
-                            className="px-3 py-1 bg-green-600 cursor-pointer text-white rounded hover:bg-green-700 transition"
+                            className="px-3 py-1 bg-black cursor-pointer text-white rounded hover:bg-gray-700 transition"
                           >
                             Save
                           </button>
@@ -312,13 +322,13 @@ export default function ManageUsersPage() {
                         <td className="p-3 border flex gap-2">
                           <button
                             onClick={() => startEditing(user)}
-                            className="px-3 py-1 bg-yellow-500 cursor-pointer text-white rounded hover:bg-yellow-600 transition"
+                            className="px-3 py-1 bg-black cursor-pointer text-white rounded hover:bg-gray-600 transition"
                           >
                             Edit
                           </button>
                           <button
                             onClick={() => handleDeleteUser(user.id)}
-                            className="px-3 py-1 bg-red-500 cursor-pointer text-white rounded hover:bg-red-600 transition"
+                            className="px-3 py-1 bg-black cursor-pointer text-white rounded hover:bg-gray-600 transition"
                           >
                             Delete
                           </button>

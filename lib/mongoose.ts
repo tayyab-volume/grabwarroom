@@ -1,4 +1,3 @@
-// lib/mongoose.ts
 import mongoose from "mongoose";
 
 const MONGODB_URI = process.env.MONGODB_URI as string;
@@ -13,7 +12,13 @@ declare global {
   // eslint-disable-next-line no-var
   var mongooseGlobal: { conn?: typeof mongoose | null; promise?: Promise<typeof mongoose> | null };
 }
-const globalWithMongoose = global as unknown as typeof global & { mongooseGlobal: any };
+
+interface MongooseGlobal {
+  conn?: typeof mongoose | null;
+  promise?: Promise<typeof mongoose> | null;
+}
+
+const globalWithMongoose = global as typeof global & { mongooseGlobal: MongooseGlobal };
 
 if (!globalWithMongoose.mongooseGlobal) {
   globalWithMongoose.mongooseGlobal = { conn: null, promise: null };
