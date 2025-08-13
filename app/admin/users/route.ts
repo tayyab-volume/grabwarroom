@@ -1,6 +1,8 @@
-import { NextApiRequest, NextApiResponse } from "next";
+// app/admin/users/route.ts
+import { NextResponse } from "next/server";
 import { MongoClient } from "mongodb";
-import jwt from 'jsonwebtoken';
+import jwt from "jsonwebtoken";
+
 const JWT_SECRET = process.env.JWT_SECRET || "supersecret";
 const MONGODB_URI = process.env.MONGODB_URI!;
 
@@ -8,82 +10,98 @@ let cachedClient: MongoClient | null = null;
 
 async function connectToDatabase() {
   if (cachedClient) return cachedClient;
-
   const client = new MongoClient(MONGODB_URI);
   await client.connect();
   cachedClient = client;
   return client;
 }
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  // JWT auth check
-  const token = req.headers.authorization?.split(" ")[1];
-  if (!token) return res.status(401).json({ error: "Unauthorized" });
-
+// Middleware to check JWT
+async function verifyToken(req: Request) {
+  const authHeader = req.headers.get("authorization");
+  const token = authHeader?.split(" ")[1];
+  if (!token) {
+    return { error: "Unauthorized", status: 401 };
+  }
   try {
     jwt.verify(token, JWT_SECRET);
+    return { ok: true };
   } catch {
-    return res.status(401).json({ error: "Invalid token" });
+    return { error: "Invalid token", status: 401 };
+  }
+}
+
+export async function GET(req: Request) {
+  const auth = await verifyToken(req);
+  if ("error" in auth) {
+    return NextResponse.json({ error: auth.error }, { status: auth.status });
   }
 
-  const client = await connectToDatabase();
-  const db = client.db();
-  const usersCollection = db.collection("users");
+  try {
+    const client = await connectToDatabase();
+    const db = client.db();
+    const usersCollection = db.collection("users");
 
-  if (req.method === "GET") {
-    try {
-      const users = await usersCollection
-        .find({}, { projection: { _id: 1, name: 1, email: 1, phone: 1 } })
-        .sort({ createdAt: -1 })
-        .toArray();
+    const users = await usersCollection
+      .find({}, { projection: { _id: 1, name: 1, email: 1, phone: 1 } })
+      .sort({ createdAt: -1 })
+      .toArray();
 
-      const formattedUsers = users.map((u) => ({
-        id: u._id.toString(),
-        name: u.name,
-        email: u.email,
-        phone: u.phone,
-      }));
+    const formattedUsers = users.map((u) => ({
+      id: u._id.toString(),
+      name: u.name,
+      email: u.email,
+      phone: u.phone,
+    }));
 
-      return res.status(200).json({ users: formattedUsers });
-    } catch {
-      return res.status(500).json({ error: "Failed to fetch users" });
-    }
+    return NextResponse.json({ users: formattedUsers });
+  } catch {
+    return NextResponse.json({ error: "Failed to fetch users" }, { status: 500 });
+  }
+}
+
+export async function POST(req: Request) {
+  const auth = await verifyToken(req);
+  if ("error" in auth) {
+    return NextResponse.json({ error: auth.error }, { status: auth.status });
   }
 
-  if (req.method === "POST") {
-    const { name, email, phone } = req.body;
+  try {
+    const { name, email, phone } = await req.json();
+
     if (!name || !email || !phone) {
-      return res.status(400).json({ error: "All fields are required" });
+      return NextResponse.json({ error: "All fields are required" }, { status: 400 });
     }
 
-    try {
-      const existingUser = await usersCollection.findOne({ email });
-      if (existingUser) {
-        return res.status(400).json({ error: "Email already exists" });
-      }
+    const client = await connectToDatabase();
+    const db = client.db();
+    const usersCollection = db.collection("users");
 
-      const now = new Date();
+    const existingUser = await usersCollection.findOne({ email });
+    if (existingUser) {
+      return NextResponse.json({ error: "Email already exists" }, { status: 400 });
+    }
 
-      const result = await usersCollection.insertOne({
-        name,
-        email,
-        phone,
-        createdAt: now,
-      });
+    const now = new Date();
+    const result = await usersCollection.insertOne({
+      name,
+      email,
+      phone,
+      createdAt: now,
+    });
 
-      return res.status(201).json({
+    return NextResponse.json(
+      {
         user: {
           id: result.insertedId.toString(),
           name,
           email,
           phone,
         },
-      });
-    } catch {
-      return res.status(500).json({ error: "Failed to add user" });
-    }
+      },
+      { status: 201 }
+    );
+  } catch {
+    return NextResponse.json({ error: "Failed to add user" }, { status: 500 });
   }
-
-  res.setHeader("Allow", ["GET", "POST"]);
-  return res.status(405).end(`Method ${req.method} Not Allowed`);
 }

@@ -1,12 +1,13 @@
-import { NextApiRequest, NextApiResponse } from "next";
+// app/admin/users/[id]/route.ts
+
+import { NextResponse } from "next/server";
 import { MongoClient, ObjectId } from "mongodb";
-import jwt from 'jsonwebtoken';
+import jwt from "jsonwebtoken";
 
 const JWT_SECRET = process.env.JWT_SECRET || "supersecret";
 const MONGODB_URI = process.env.MONGODB_URI!;
 
 let cachedClient: MongoClient | null = null;
-
 async function connectToDatabase() {
   if (cachedClient) return cachedClient;
   const client = new MongoClient(MONGODB_URI);
@@ -15,79 +16,96 @@ async function connectToDatabase() {
   return client;
 }
 
-interface UpdateFields {
-  name?: string;
-  email?: string;
-  phone?: string;
+async function verifyJWT(token: string) {
+  return new Promise<void>((resolve, reject) => {
+    jwt.verify(token, JWT_SECRET, (err) => {
+      if (err) reject(err);
+      else resolve();
+    });
+  });
 }
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const token = req.headers.authorization?.split(" ")[1];
-  if (!token) return res.status(401).json({ error: "Unauthorized" });
+function getIdFromRequest(req: Request) {
+  const url = new URL(req.url);
+  const paths = url.pathname.split("/");
+  return paths[paths.length - 1];
+}
 
+export async function DELETE(req: Request) {
   try {
-    jwt.verify(token, JWT_SECRET);
+    const authHeader = req.headers.get("authorization");
+    if (!authHeader) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+    const token = authHeader.split(" ")[1];
+    await verifyJWT(token);
+
+    const id = getIdFromRequest(req);
+    if (!ObjectId.isValid(id)) {
+      return NextResponse.json({ error: "Invalid id" }, { status: 400 });
+    }
+
+    const client = await connectToDatabase();
+    const db = client.db();
+    const result = await db.collection("users").deleteOne({ _id: new ObjectId(id) });
+
+    if (result.deletedCount === 0) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
+    return NextResponse.json({ message: "User deleted" });
   } catch {
-    return res.status(401).json({ error: "Invalid token" });
+    return NextResponse.json({ error: "Failed to delete user" }, { status: 500 });
   }
+}
 
-  const { id } = req.query;
-  if (!id || Array.isArray(id)) {
-    return res.status(400).json({ error: "Invalid id" });
-  }
+export async function PATCH(req: Request) {
+  try {
+    const authHeader = req.headers.get("authorization");
+    if (!authHeader) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-  const client = await connectToDatabase();
-  const db = client.db();
-  const usersCollection = db.collection("users");
+    const token = authHeader.split(" ")[1];
+    await verifyJWT(token);
 
-  if (req.method === "DELETE") {
-    try {
-      const result = await usersCollection.deleteOne({ _id: new ObjectId(id) });
-      if (result.deletedCount === 0) {
-        return res.status(404).json({ error: "User not found" });
-      }
-      return res.status(200).json({ message: "User deleted" });
-    } catch {
-      return res.status(500).json({ error: "Failed to delete user" });
+    const id = getIdFromRequest(req);
+    if (!ObjectId.isValid(id)) {
+      return NextResponse.json({ error: "Invalid id" }, { status: 400 });
     }
-  }
 
-  if (req.method === "PATCH") {
-    const { name, email, phone } = req.body;
-
+    const { name, email, phone } = await req.json();
     if (!name && !email && !phone) {
-      return res.status(400).json({ error: "At least one field required for update" });
+      return NextResponse.json({ error: "At least one field required" }, { status: 400 });
     }
 
-    const updateFields: UpdateFields = {};
+    const updateFields: Record<string, string> = {};
     if (name) updateFields.name = name;
     if (email) updateFields.email = email;
     if (phone) updateFields.phone = phone;
 
-    try {
-      if (email) {
-        // Check if another user already has the email
-        const existingUser = await usersCollection.findOne({ email, _id: { $ne: new ObjectId(id) } });
-        if (existingUser) {
-          return res.status(400).json({ error: "Email already exists" });
-        }
+    const client = await connectToDatabase();
+    const db = client.db();
+    const usersCollection = db.collection("users");
+
+    if (email) {
+      const exists = await usersCollection.findOne({
+        email,
+        _id: { $ne: new ObjectId(id) },
+      });
+      if (exists) {
+        return NextResponse.json({ error: "Email already exists" }, { status: 400 });
       }
-
-      const result = await usersCollection.updateOne(
-        { _id: new ObjectId(id) },
-        { $set: updateFields }
-      );
-
-      if (result.matchedCount === 0) {
-        return res.status(404).json({ error: "User not found" });
-      }
-
-      return res.status(200).json({ message: "User updated" });
-    } catch {
-      return res.status(500).json({ error: "Failed to update user" });
     }
-  }
 
-  res.setHeader("Allow", ["DELETE", "PATCH"]);
-  return res.status(405).end(`Method ${req.method} Not Allowed`);
+    const result = await usersCollection.updateOne(
+      { _id: new ObjectId(id) },
+      { $set: updateFields }
+    );
+
+    if (result.matchedCount === 0) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
+    return NextResponse.json({ message: "User updated" });
+  } catch {
+    return NextResponse.json({ error: "Failed to update user" }, { status: 500 });
+  }
 }
