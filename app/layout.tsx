@@ -17,6 +17,9 @@ const borel = Borel({
 export const metadata: Metadata = {
   title: "GrabWarRoom by Volume",
   description: "Streamline meeting room bookings at Volume Creative Ad Agency Delhi NCR.",
+  icons: {
+    icon: "/fav.png", // This will look for public/fav.png
+  },
 };
 
 export default function RootLayout({
@@ -26,6 +29,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <link rel="icon" href="/fav.png" type="image/png" />
+      </head>
       <body className={`${gothicA1.variable} ${borel.variable} antialiased`}>
         {children}
       </body>

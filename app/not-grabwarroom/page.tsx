@@ -15,7 +15,7 @@ export default function NotGrabWarRoom() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const allowedIP = "180.151.238.126";
+  const allowedPrefix = "180.151";
 
   const verifyNetwork = async () => {
     setLoading(true);
@@ -26,10 +26,12 @@ export default function NotGrabWarRoom() {
       const data = await res.json();
       const userIP = data.ip;
 
-      if (userIP !== allowedIP) {
-        setError("You are not connected to the authorized GrabWarRoom network.");
+      if (!userIP.startsWith(allowedPrefix)) {
+        setError(
+          "You are not connected to the authorized GrabWarRoom network."
+        );
       } else {
-        // If IP matches, redirect to home or dashboard or wherever appropriate
+        // If IP matches prefix, redirect
         router.replace("/");
       }
     } catch (e) {
@@ -47,8 +49,8 @@ export default function NotGrabWarRoom() {
     >
       <h1 className="text-3xl font-extrabold text-black mb-4">Access Denied</h1>
       <p className="mt-2 text-black max-w-md mb-6">
-        Sorry, this app can only be accessed from the authorized GrabWarRoom network.
-        Please connect to the correct Wi-Fi to continue.
+        Sorry, this app can only be accessed from the authorized GrabWarRoom
+        network. Please connect to the correct Wi-Fi to continue.
       </p>
 
       {error && <p className="text-red-600 mb-6">{error}</p>}

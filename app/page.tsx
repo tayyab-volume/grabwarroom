@@ -24,11 +24,12 @@ export default function LandingPage() {
         const data = await res.json();
         const userIP = data.ip;
 
-        // Your office Wi-Fi's public IP
-        const allowedIP = "180.151.238.126";
+        // Your office Wi-Fi's public IP prefix
+        const allowedPrefix = "180.151";
 
-        if (userIP !== allowedIP) {
-          router.replace("/not-grabwarroom"); // or your custom "access denied" page
+        if (!userIP.startsWith(allowedPrefix)) {
+          console.log(userIP)
+          router.replace("/not-grabwarroom"); // Redirect if not matching prefix
           return;
         }
       } catch (error) {
